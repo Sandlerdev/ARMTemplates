@@ -1,0 +1,125 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "metadata": {
+    "_generator": {
+      "name": "bicep",
+      "version": "0.4.1318.3566",
+      "templateHash": "17914491873817503043"
+    }
+  },
+  "parameters": {
+    "ResourcePrefix": {
+      "type": "string",
+      "metadata": {
+        "description": "This prefix will be applied to new resource names."
+      },
+      "maxLength": 3,
+      "minLength": 3
+    },
+    "location": {
+      "type": "string",
+      "defaultValue": "[resourceGroup().location]"
+    },
+    "IoTHubUnits": {
+      "type": "int",
+      "defaultValue": 1
+    },
+    "IoTHubSKU": {
+      "type": "string",
+      "defaultValue": "S1",
+      "metadata": {
+        "description": "Select the SKU assoicateed with the IoT Hub to be created."
+      },
+      "allowedValues": [
+        "B1",
+        "B2",
+        "B3",
+        "F1",
+        "S1",
+        "S2",
+        "S3"
+      ]
+    }
+  },
+  "resources": [
+    {
+      "type": "Microsoft.Storage/storageAccounts",
+      "apiVersion": "2021-08-01",
+      "name": "[format('{0}{1}storage', parameters('ResourcePrefix'), uniqueString(resourceGroup().id))]",
+      "location": "[parameters('location')]",
+      "kind": "StorageV2",
+      "sku": {
+        "name": "Standard_LRS"
+      },
+      "properties": {
+        "accessTier": "Hot",
+        "supportsHttpsTrafficOnly": true
+      }
+    },
+    {
+      "type": "Microsoft.Devices/IotHubs",
+      "apiVersion": "2021-07-02",
+      "name": "[format('{0}-IoTHub', parameters('ResourcePrefix'))]",
+      "location": "[parameters('location')]",
+      "sku": {
+        "name": "[parameters('IoTHubSKU')]",
+        "capacity": "[parameters('IoTHubUnits')]"
+      },
+      "properties": {
+        "routing": {
+          "endpoints": {
+            "storageContainers": [
+              {
+                "connectionString": "[format('DefaultEndpointsProtocol=https;AccountName={0};EndpointSuffix={1};AccountKey={2}', format('{0}{1}storage', parameters('ResourcePrefix'), uniqueString(resourceGroup().id)), environment().suffixes.storage, listKeys(resourceId('Microsoft.Storage/storageAccounts', format('{0}{1}storage', parameters('ResourcePrefix'), uniqueString(resourceGroup().id))), '2021-08-01').keys[0].value)]",
+                "containerName": "telemetrydata",
+                "fileNameFormat": "{iothub}/{partition}/{YYYY}/{MM}/{DD}/{HH}/{mm}.avro",
+                "encoding": "JSON",
+                "name": "telemetrydata"
+              }
+            ]
+          },
+          "routes": [
+            {
+              "name": "sendToStorageAccount",
+              "source": "DeviceMessages",
+              "condition": "true",
+              "endpointNames": [
+                "telemetrydata"
+              ],
+              "isEnabled": true
+            }
+          ]
+        },
+        "storageEndpoints": {
+          "$default": {
+            "sasTtlAsIso8601": "PT1H",
+            "connectionString": "[format('DefaultEndpointsProtocol=https;AccountName={0};EndpointSuffix={1};AccountKey={2}', format('{0}{1}storage', parameters('ResourcePrefix'), uniqueString(resourceGroup().id)), environment().suffixes.storage, listKeys(resourceId('Microsoft.Storage/storageAccounts', format('{0}{1}storage', parameters('ResourcePrefix'), uniqueString(resourceGroup().id))), '2021-08-01').keys[0].value)]",
+            "containerName": "initialuploads",
+            "authenticationType": "keyBased"
+          }
+        },
+        "messagingEndpoints": {
+          "fileNotifications": {
+            "lockDurationAsIso8601": "PT1M",
+            "ttlAsIso8601": "PT1H",
+            "maxDeliveryCount": 10
+          }
+        },
+        "enableFileUploadNotifications": true,
+        "cloudToDevice": {
+          "maxDeliveryCount": 10,
+          "defaultTtlAsIso8601": "PT1H",
+          "feedback": {
+            "lockDurationAsIso8601": "PT1M",
+            "ttlAsIso8601": "PT1H",
+            "maxDeliveryCount": 10
+          }
+        }
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.Storage/storageAccounts', format('{0}{1}storage', parameters('ResourcePrefix'), uniqueString(resourceGroup().id)))]"
+      ]
+    }
+  ]
+}
