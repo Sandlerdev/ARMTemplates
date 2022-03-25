@@ -2,6 +2,7 @@
 @maxLength(3)
 @description('This prefix will be applied to new resource names.')
 param ResourcePrefix string
+@description('By default the region of the resource group will be used for the location of created resources.')
 param location string = resourceGroup().location
 param IoTHubUnits int = 1
 
