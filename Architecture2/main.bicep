@@ -25,7 +25,7 @@ param IoTHubSKU string = 'S1'
   'FTEG'
 ])
 @description('Select the data source for data being sent to IoT Hub and TSI.  This will dictate the configuration of the Time Series ID property that is configured at creation time.')
-param DataSource string = 'ITD'
+param DataSource string = 'FTEG'
 
 @minValue(0)
 @maxValue(30)
@@ -33,6 +33,11 @@ param DataSource string = 'ITD'
 param WarmStorageDuration int = 7
 
 var blobStorageConnectionString = 'DefaultEndpointsProtocol=https;AccountName=${IoTStorage.name};EndpointSuffix=${environment().suffixes.storage};AccountKey=${listKeys(IoTStorage.id, IoTStorage.apiVersion).keys[0].value}'
+var iotHubOnwerKey = IoTHub.listkeys().value
+//output iothubOnwerKeyOut string = iotHubOnwerKey[0].primaryKey
+var eventSourceName = '${TSIEVN.name}/${ResourcePrefix}EventSource'
+//output eventSoruceNameOut string = eventSourceName
+var IoTHubName = '${ResourcePrefix}IoTHub'
 var TSIConsumerGroupName = '${IoTHub.name}/events/TSI'
 
 resource IoTStorage 'Microsoft.Storage/storageAccounts@2021-08-01'= {
@@ -56,19 +61,8 @@ resource blobServices 'Microsoft.Storage/storageAccounts/blobServices@2021-08-01
 
 }
 
-//used when routing IoT Data to Storage.
-// resource telemetryContainer 'Microsoft.Storage/storageAccounts/blobServices/containers@2021-08-01' = {
-//   name: 'telemetrydata'
-//   parent: blobServices
-//   properties:{
-//     publicAccess: 'None'
-
-//   }
-
-// }
-
 resource IoTHub 'Microsoft.Devices/IotHubs@2021-07-02'= {
-  name: '${ResourcePrefix}-IoTHub'
+  name: IoTHubName
   location: location
   sku:{
     name: IoTHubSKU
@@ -76,34 +70,7 @@ resource IoTHub 'Microsoft.Devices/IotHubs@2021-07-02'= {
     
   }
   properties:{
-    // routing: {
-    //   endpoints: {
-        
-    //     storageContainers: [
-    //       {
-    //         connectionString: blobStorageConnectionString
-    //         containerName: 'telemetrydata'
-    //         fileNameFormat: '{iothub}/{partition}/{YYYY}/{MM}/{DD}/{HH}/{mm}.avro'
-    //         encoding: 'JSON'
-    //         name: 'telemetrydata'
-    //       }
-    //     ]
-      
-    // }
-  
-    //   routes: [
-    //     {
-    //       name: 'sendToStorageAccount'
-    //       source: 'DeviceMessages'
-    //       condition: 'true'
-    //       endpointNames: [
-    //         'telemetrydata'
-    //       ]
-    //       isEnabled: true
-    //     }
-    //   ]
-    // }
-    storageEndpoints: {
+     storageEndpoints: {
       '$default': {
         sasTtlAsIso8601: 'PT1H'
         connectionString: blobStorageConnectionString
@@ -129,17 +96,63 @@ resource IoTHub 'Microsoft.Devices/IotHubs@2021-07-02'= {
       }
     }
   }
+
 }
 
+
 resource TSIConsumerGroup 'Microsoft.Devices/IotHubs/eventHubEndpoints/ConsumerGroups@2021-07-02' = {
-  name: TSIConsumerGroupName
+  name: TSIConsumerGroupName //'ab2IoTHub/events/TSI' 
   properties:{
     name: 'TSI'
+
   }
 }
 
+resource TSIES 'Microsoft.TimeSeriesInsights/environments/eventSources@2020-05-15' = {
+  kind: 'Microsoft.IoTHub'
+  location: location
+ 
+  properties: {
+    sharedAccessKey: iotHubOnwerKey[0].primaryKey
+    eventSourceResourceId: IoTHub.id   
+    iotHubName: IoTHub.name
+    consumerGroupName: TSIConsumerGroup.name
+    keyName:'iothubowner'
+    timestampPropertyName: 'gatewayData.vqts.t'
 
-//TSI Event Source
+  }
+  name: eventSourceName 
+}
 
-//TSI
+resource TSIEVN 'Microsoft.TimeSeriesInsights/environments@2020-05-15' = {
+  sku: {
+    name: 'L1'
+    capacity: 1
+  }
+  kind: 'Gen2'
+  location: location
+  tags: {
+    
+  }
+  properties: {
+    storageConfiguration: {
+      accountName: '${IoTStorage.name}'
+      managementKey: '${IoTStorage.listKeys().keys[0].value}'
+    }
 
+    timeSeriesIdProperties: [
+      {
+        name: 'iothub-connection0device-id'
+        type: 'String'
+      }
+      {
+        name: 'gatewayData.model_id'
+        type: 'String'
+      }
+    ]
+    warmStoreConfiguration: {
+      dataRetention: 'P7D'
+    }
+  }
+  name: '${ResourcePrefix}TSI'
+}

@@ -39,7 +39,7 @@ ITD* This solution assumes the use of the FileUpload IoT Edge Connector and asso
 Clone the respository to your local machine then open a terminal and execute the following:
 
 ```bash
-az deployment group create --resource-group ARMTestRG --template-file ./Architecture1/main.bicep --parameters ResourcePrefix=<prefix goes here> 
+az deployment group create --resource-group ARMTestRG2 --template-file ./Architecture2/main.bicep --parameters ResourcePrefix=<prefix goes here>
 
 ```
 
