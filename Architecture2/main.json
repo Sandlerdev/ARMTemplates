@@ -1,0 +1,203 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "metadata": {
+    "_generator": {
+      "name": "bicep",
+      "version": "0.4.1318.3566",
+      "templateHash": "15416157826791366352"
+    }
+  },
+  "parameters": {
+    "ResourcePrefix": {
+      "type": "string",
+      "metadata": {
+        "description": "This prefix will be applied to new resource names."
+      },
+      "maxLength": 3,
+      "minLength": 3
+    },
+    "location": {
+      "type": "string",
+      "defaultValue": "[resourceGroup().location]",
+      "metadata": {
+        "description": "By default the region of the resource group will be used for the location of created resources."
+      }
+    },
+    "IoTHubUnits": {
+      "type": "int",
+      "defaultValue": 1
+    },
+    "IoTHubSKU": {
+      "type": "string",
+      "defaultValue": "S1",
+      "metadata": {
+        "description": "Select the SKU assoicateed with the IoT Hub to be created."
+      },
+      "allowedValues": [
+        "B1",
+        "B2",
+        "B3",
+        "F1",
+        "S1",
+        "S2",
+        "S3"
+      ]
+    },
+    "DataSource": {
+      "type": "string",
+      "defaultValue": "FTEG",
+      "metadata": {
+        "description": "Select the data source for data being sent to IoT Hub and TSI.  This will dictate the configuration of the Time Series ID property that is configured at creation time."
+      },
+      "allowedValues": [
+        "ITD",
+        "OPCUA",
+        "FTEG"
+      ]
+    },
+    "WarmStorageDuration": {
+      "type": "int",
+      "defaultValue": 7,
+      "metadata": {
+        "description": "Select the number of days to hold TSI data in warm storage.  Valid values between 0 and 30."
+      },
+      "maxValue": 30,
+      "minValue": 0
+    }
+  },
+  "variables": {
+    "eventSourceName": "[format('{0}/{1}EventSource', format('{0}TSI', parameters('ResourcePrefix')), parameters('ResourcePrefix'))]",
+    "IoTHubName": "[format('{0}IoTHub', parameters('ResourcePrefix'))]",
+    "TSIConsumerGroupName": "[format('{0}/events/TSI', variables('IoTHubName'))]"
+  },
+  "resources": [
+    {
+      "type": "Microsoft.Storage/storageAccounts",
+      "apiVersion": "2021-08-01",
+      "name": "[format('{0}{1}storage', parameters('ResourcePrefix'), uniqueString(resourceGroup().id))]",
+      "location": "[parameters('location')]",
+      "kind": "StorageV2",
+      "sku": {
+        "name": "Standard_LRS"
+      },
+      "properties": {
+        "accessTier": "Hot",
+        "supportsHttpsTrafficOnly": true
+      }
+    },
+    {
+      "type": "Microsoft.Storage/storageAccounts/blobServices",
+      "apiVersion": "2021-08-01",
+      "name": "[format('{0}/{1}', format('{0}{1}storage', parameters('ResourcePrefix'), uniqueString(resourceGroup().id)), 'default')]",
+      "dependsOn": [
+        "[resourceId('Microsoft.Storage/storageAccounts', format('{0}{1}storage', parameters('ResourcePrefix'), uniqueString(resourceGroup().id)))]"
+      ]
+    },
+    {
+      "type": "Microsoft.Devices/IotHubs",
+      "apiVersion": "2021-07-02",
+      "name": "[variables('IoTHubName')]",
+      "location": "[parameters('location')]",
+      "sku": {
+        "name": "[parameters('IoTHubSKU')]",
+        "capacity": "[parameters('IoTHubUnits')]"
+      },
+      "properties": {
+        "storageEndpoints": {
+          "$default": {
+            "sasTtlAsIso8601": "PT1H",
+            "connectionString": "[format('DefaultEndpointsProtocol=https;AccountName={0};EndpointSuffix={1};AccountKey={2}', format('{0}{1}storage', parameters('ResourcePrefix'), uniqueString(resourceGroup().id)), environment().suffixes.storage, listKeys(resourceId('Microsoft.Storage/storageAccounts', format('{0}{1}storage', parameters('ResourcePrefix'), uniqueString(resourceGroup().id))), '2021-08-01').keys[0].value)]",
+            "containerName": "initialuploads",
+            "authenticationType": "keyBased"
+          }
+        },
+        "messagingEndpoints": {
+          "fileNotifications": {
+            "lockDurationAsIso8601": "PT1M",
+            "ttlAsIso8601": "PT1H",
+            "maxDeliveryCount": 10
+          }
+        },
+        "enableFileUploadNotifications": true,
+        "cloudToDevice": {
+          "maxDeliveryCount": 10,
+          "defaultTtlAsIso8601": "PT1H",
+          "feedback": {
+            "lockDurationAsIso8601": "PT1M",
+            "ttlAsIso8601": "PT1H",
+            "maxDeliveryCount": 10
+          }
+        }
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.Storage/storageAccounts', format('{0}{1}storage', parameters('ResourcePrefix'), uniqueString(resourceGroup().id)))]"
+      ]
+    },
+    {
+      "type": "Microsoft.Devices/IotHubs/eventHubEndpoints/ConsumerGroups",
+      "apiVersion": "2021-07-02",
+      "name": "[variables('TSIConsumerGroupName')]",
+      "properties": {
+        "name": "TSI"
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.Devices/IotHubs', variables('IoTHubName'))]"
+      ]
+    },
+    {
+      "type": "Microsoft.TimeSeriesInsights/environments/eventSources",
+      "apiVersion": "2020-05-15",
+      "name": "[variables('eventSourceName')]",
+      "kind": "Microsoft.IoTHub",
+      "location": "[parameters('location')]",
+      "properties": {
+        "sharedAccessKey": "[listkeys(resourceId('Microsoft.Devices/IotHubs', variables('IoTHubName')), '2021-07-02').value[0].primaryKey]",
+        "eventSourceResourceId": "[resourceId('Microsoft.Devices/IotHubs', variables('IoTHubName'))]",
+        "iotHubName": "[variables('IoTHubName')]",
+        "consumerGroupName": "[variables('TSIConsumerGroupName')]",
+        "keyName": "iothubowner",
+        "timestampPropertyName": "gatewayData.vqts.t"
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.Devices/IotHubs', variables('IoTHubName'))]",
+        "[resourceId('Microsoft.Devices/IotHubs/eventHubEndpoints/ConsumerGroups', split(variables('TSIConsumerGroupName'), '/')[0], split(variables('TSIConsumerGroupName'), '/')[1], split(variables('TSIConsumerGroupName'), '/')[2])]",
+        "[resourceId('Microsoft.TimeSeriesInsights/environments', format('{0}TSI', parameters('ResourcePrefix')))]"
+      ]
+    },
+    {
+      "type": "Microsoft.TimeSeriesInsights/environments",
+      "apiVersion": "2020-05-15",
+      "name": "[format('{0}TSI', parameters('ResourcePrefix'))]",
+      "sku": {
+        "name": "L1",
+        "capacity": 1
+      },
+      "kind": "Gen2",
+      "location": "[parameters('location')]",
+      "tags": {},
+      "properties": {
+        "storageConfiguration": {
+          "accountName": "[format('{0}', format('{0}{1}storage', parameters('ResourcePrefix'), uniqueString(resourceGroup().id)))]",
+          "managementKey": "[format('{0}', listKeys(resourceId('Microsoft.Storage/storageAccounts', format('{0}{1}storage', parameters('ResourcePrefix'), uniqueString(resourceGroup().id))), '2021-08-01').keys[0].value)]"
+        },
+        "timeSeriesIdProperties": [
+          {
+            "name": "iothub-connection0device-id",
+            "type": "String"
+          },
+          {
+            "name": "gatewayData.model_id",
+            "type": "String"
+          }
+        ],
+        "warmStoreConfiguration": {
+          "dataRetention": "P7D"
+        }
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.Storage/storageAccounts', format('{0}{1}storage', parameters('ResourcePrefix'), uniqueString(resourceGroup().id)))]"
+      ]
+    }
+  ]
+}
