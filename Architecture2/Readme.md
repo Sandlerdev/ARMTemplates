@@ -47,4 +47,4 @@ az deployment group create --resource-group ARMTestRG2 --template-file ./Archite
 
 To launch a Custom deployment of this template click the following link:
 
-[![Deploy to Azure](https://aka.ms/deploytoazurebutton)](https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2FSandlerdev%2FARMTemplates%2Fmaster%2FArchitecture1%2Fmain.json)
+[![Deploy to Azure](https://aka.ms/deploytoazurebutton)](https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2FSandlerdev%2FARMTemplates%2Fmaster%2FArchitecture2%2Fmain.json)
