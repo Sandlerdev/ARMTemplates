@@ -151,7 +151,7 @@ resource TSIEVN 'Microsoft.TimeSeriesInsights/environments@2020-05-15' = {
       }
     ]
     warmStoreConfiguration: {
-      dataRetention: 'P7D'
+      dataRetention: 'P${WarmStorageDuration}D'
     }
   }
   name: '${ResourcePrefix}TSI'

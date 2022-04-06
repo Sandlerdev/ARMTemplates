@@ -5,7 +5,7 @@
     "_generator": {
       "name": "bicep",
       "version": "0.4.1318.3566",
-      "templateHash": "17653215737854885691"
+      "templateHash": "2914774781352908482"
     }
   },
   "parameters": {
@@ -69,7 +69,16 @@
   "variables": {
     "eventSourceName": "[format('{0}/{1}EventSource', format('{0}TSI', parameters('ResourcePrefix')), parameters('ResourcePrefix'))]",
     "IoTHubName": "[format('{0}IoTHub', parameters('ResourcePrefix'))]",
-    "TSIConsumerGroupName": "[format('{0}/events/TSI', variables('IoTHubName'))]"
+    "TSIConsumerGroupName": "[format('{0}/events/TSI', variables('IoTHubName'))]",
+    "timeSeriesIdPropertiesKey1": "iothub-connection0device-id",
+    "timeSeriesIdPropertiesKey2": "gatewayData.model_id",
+    "eventHubSKUName": "Standard",
+    "eventHubSKUTier": "Standard",
+    "eventHubSKUCapactity": 1,
+    "eventHubNSName": "[format('{0}EventTHub', parameters('ResourcePrefix'))]",
+    "eventHubIOTName": "[format('{0}/iothubdata', variables('eventHubNSName'))]",
+    "eventHubTelemName": "[format('{0}/telemetrydata', variables('eventHubNSName'))]",
+    "serverFarmName": "[format('{0}ServerFarm', parameters('ResourcePrefix'))]"
   },
   "resources": [
     {
@@ -135,6 +144,50 @@
       ]
     },
     {
+      "type": "Microsoft.EventHub/namespaces",
+      "apiVersion": "2021-11-01",
+      "name": "[variables('eventHubNSName')]",
+      "sku": {
+        "name": "[variables('eventHubSKUName')]",
+        "tier": "[variables('eventHubSKUTier')]",
+        "capacity": "[variables('eventHubSKUCapactity')]"
+      },
+      "location": "[parameters('location')]",
+      "properties": {
+        "disableLocalAuth": false,
+        "zoneRedundant": true,
+        "isAutoInflateEnabled": false,
+        "maximumThroughputUnits": 0,
+        "kafkaEnabled": true
+      }
+    },
+    {
+      "type": "Microsoft.EventHub/namespaces/eventhubs",
+      "apiVersion": "2021-11-01",
+      "name": "[variables('eventHubIOTName')]",
+      "properties": {
+        "messageRetentionInDays": 1,
+        "partitionCount": 4,
+        "status": "Active"
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.EventHub/namespaces', variables('eventHubNSName'))]"
+      ]
+    },
+    {
+      "type": "Microsoft.EventHub/namespaces/eventhubs",
+      "apiVersion": "2021-11-01",
+      "name": "[variables('eventHubTelemName')]",
+      "properties": {
+        "messageRetentionInDays": 1,
+        "partitionCount": 4,
+        "status": "Active"
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.EventHub/namespaces', variables('eventHubNSName'))]"
+      ]
+    },
+    {
       "type": "Microsoft.Devices/IotHubs/eventHubEndpoints/ConsumerGroups",
       "apiVersion": "2021-07-02",
       "name": "[variables('TSIConsumerGroupName')]",
@@ -149,19 +202,22 @@
       "type": "Microsoft.TimeSeriesInsights/environments/eventSources",
       "apiVersion": "2020-05-15",
       "name": "[variables('eventSourceName')]",
-      "kind": "Microsoft.IoTHub",
+      "kind": "Microsoft.EventHub",
       "location": "[parameters('location')]",
       "properties": {
         "sharedAccessKey": "[listkeys(resourceId('Microsoft.Devices/IotHubs', variables('IoTHubName')), '2021-07-02').value[0].primaryKey]",
-        "eventSourceResourceId": "[resourceId('Microsoft.Devices/IotHubs', variables('IoTHubName'))]",
-        "iotHubName": "[variables('IoTHubName')]",
-        "consumerGroupName": "[variables('TSIConsumerGroupName')]",
-        "keyName": "iothubowner",
-        "timestampPropertyName": "gatewayData.vqts.t"
+        "eventSourceResourceId": "[resourceId('Microsoft.EventHub/namespaces/eventhubs', split(variables('eventHubTelemName'), '/')[0], split(variables('eventHubTelemName'), '/')[1])]",
+        "eventHubName": "telemetrydata",
+        "consumerGroupName": "[format('{0}/telemetrydata/tsieventhub', variables('eventHubTelemName'))]",
+        "keyName": "TSI",
+        "serviceBusNamespace": "[variables('eventHubNSName')]",
+        "timestampPropertyName": "body.gatewayData.vqts.t"
       },
       "dependsOn": [
+        "[resourceId('Microsoft.EventHub/namespaces', variables('eventHubNSName'))]",
         "[resourceId('Microsoft.Devices/IotHubs', variables('IoTHubName'))]",
-        "[resourceId('Microsoft.Devices/IotHubs/eventHubEndpoints/ConsumerGroups', split(variables('TSIConsumerGroupName'), '/')[0], split(variables('TSIConsumerGroupName'), '/')[1], split(variables('TSIConsumerGroupName'), '/')[2])]",
+        "[resourceId('Microsoft.EventHub/namespaces/eventhubs', split(variables('eventHubTelemName'), '/')[0], split(variables('eventHubTelemName'), '/')[1])]",
+        "[resourceId('Microsoft.EventHub/namespaces/eventhubs/consumergroups', split(format('{0}/telemetrydata/tsieventhub', variables('eventHubTelemName')), '/')[0], split(format('{0}/telemetrydata/tsieventhub', variables('eventHubTelemName')), '/')[1], split(format('{0}/telemetrydata/tsieventhub', variables('eventHubTelemName')), '/')[2])]",
         "[resourceId('Microsoft.TimeSeriesInsights/environments', format('{0}TSI', parameters('ResourcePrefix')))]"
       ]
     },
@@ -183,11 +239,11 @@
         },
         "timeSeriesIdProperties": [
           {
-            "name": "iothub-connection0device-id",
+            "name": "[variables('timeSeriesIdPropertiesKey1')]",
             "type": "String"
           },
           {
-            "name": "gatewayData.model_id",
+            "name": "[variables('timeSeriesIdPropertiesKey2')]",
             "type": "String"
           }
         ],
@@ -197,6 +253,103 @@
       },
       "dependsOn": [
         "[resourceId('Microsoft.Storage/storageAccounts', format('{0}{1}storage', parameters('ResourcePrefix'), uniqueString(resourceGroup().id)))]"
+      ]
+    },
+    {
+      "type": "Microsoft.Web/serverfarms",
+      "apiVersion": "2021-03-01",
+      "name": "[variables('serverFarmName')]",
+      "kind": "elastic",
+      "location": "[parameters('location')]",
+      "properties": {
+        "perSiteScaling": false,
+        "maximumElasticWorkerCount": 20,
+        "elasticScaleEnabled": true,
+        "targetWorkerSizeId": 0,
+        "targetWorkerCount": 0
+      },
+      "sku": {
+        "name": "EP1",
+        "tier": "ElasticPremium",
+        "size": "EP1",
+        "family": "EP",
+        "capacity": 1
+      }
+    },
+    {
+      "type": "Microsoft.EventHub/namespaces/eventhubs/authorizationRules",
+      "apiVersion": "2021-11-01",
+      "name": "[format('{0}/iothubdata/iothubroutes_prototypeDev-hub', variables('eventHubNSName'))]",
+      "properties": {
+        "rights": [
+          "Send"
+        ]
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.EventHub/namespaces', variables('eventHubNSName'))]"
+      ]
+    },
+    {
+      "type": "Microsoft.EventHub/namespaces/eventhubs/authorizationRules",
+      "apiVersion": "2021-11-01",
+      "name": "[format('{0}/iothubdata/IoTMessageParser', variables('eventHubNSName'))]",
+      "properties": {
+        "rights": [
+          "Listen"
+        ]
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.EventHub/namespaces', variables('eventHubNSName'))]"
+      ]
+    },
+    {
+      "type": "Microsoft.EventHub/namespaces/eventhubs/authorizationRules",
+      "apiVersion": "2021-11-01",
+      "name": "[format('{0}/telemetrydata/IoTMessageParser', variables('eventHubNSName'))]",
+      "properties": {
+        "rights": [
+          "Send"
+        ]
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.EventHub/namespaces', variables('eventHubNSName'))]"
+      ]
+    },
+    {
+      "type": "Microsoft.EventHub/namespaces/eventhubs/authorizationRules",
+      "apiVersion": "2021-11-01",
+      "name": "[format('{0}/telemetrydata/TSI', variables('eventHubNSName'))]",
+      "properties": {
+        "rights": [
+          "Listen"
+        ]
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.EventHub/namespaces', variables('eventHubNSName'))]"
+      ]
+    },
+    {
+      "type": "Microsoft.EventHub/namespaces/eventhubs/consumergroups",
+      "apiVersion": "2021-11-01",
+      "name": "[format('{0}/telemetrydata/$Default', variables('eventHubTelemName'))]",
+      "dependsOn": [
+        "[resourceId('Microsoft.EventHub/namespaces/eventhubs', split(variables('eventHubTelemName'), '/')[0], split(variables('eventHubTelemName'), '/')[1])]"
+      ]
+    },
+    {
+      "type": "Microsoft.EventHub/namespaces/eventhubs/consumergroups",
+      "apiVersion": "2021-11-01",
+      "name": "[format('{0}/iothubdata/iotmessageparser', variables('eventHubIOTName'))]",
+      "dependsOn": [
+        "[resourceId('Microsoft.EventHub/namespaces/eventhubs', split(variables('eventHubIOTName'), '/')[0], split(variables('eventHubIOTName'), '/')[1])]"
+      ]
+    },
+    {
+      "type": "Microsoft.EventHub/namespaces/eventhubs/consumergroups",
+      "apiVersion": "2021-11-01",
+      "name": "[format('{0}/telemetrydata/tsieventhub', variables('eventHubTelemName'))]",
+      "dependsOn": [
+        "[resourceId('Microsoft.EventHub/namespaces/eventhubs', split(variables('eventHubTelemName'), '/')[0], split(variables('eventHubTelemName'), '/')[1])]"
       ]
     }
   ]
