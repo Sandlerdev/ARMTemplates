@@ -5,7 +5,7 @@
     "_generator": {
       "name": "bicep",
       "version": "0.4.1318.3566",
-      "templateHash": "1671326616233217413"
+      "templateHash": "8573885049411337218"
     }
   },
   "parameters": {
@@ -96,7 +96,7 @@
               {
                 "connectionString": "[format('DefaultEndpointsProtocol=https;AccountName={0};EndpointSuffix={1};AccountKey={2}', format('{0}{1}storage', parameters('ResourcePrefix'), uniqueString(resourceGroup().id)), environment().suffixes.storage, listKeys(resourceId('Microsoft.Storage/storageAccounts', format('{0}{1}storage', parameters('ResourcePrefix'), uniqueString(resourceGroup().id))), '2021-08-01').keys[0].value)]",
                 "containerName": "telemetrydata",
-                "fileNameFormat": "{iothub}/{partition}/{YYYY}/{MM}/{DD}/{HH}/{mm}.avro",
+                "fileNameFormat": "{iothub}/{partition}/{YYYY}/{MM}/{DD}/{HH}/{mm}.json",
                 "encoding": "JSON",
                 "name": "telemetrydata"
               }

@@ -5,7 +5,7 @@
     "_generator": {
       "name": "bicep",
       "version": "0.4.1318.3566",
-      "templateHash": "16035562602544213503"
+      "templateHash": "6743662663372901199"
     }
   },
   "parameters": {
@@ -370,6 +370,20 @@
       ]
     },
     {
+      "type": "Microsoft.EventHub/namespaces/eventhubs/authorizationRules",
+      "apiVersion": "2021-11-01",
+      "name": "[format('{0}/telemetrydata/TwinUpdateService', variables('eventHubNSName'))]",
+      "properties": {
+        "rights": [
+          "Listen"
+        ]
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.EventHub/namespaces', variables('eventHubNSName'))]",
+        "[resourceId('Microsoft.EventHub/namespaces/eventhubs', split(variables('eventHubTelemName'), '/')[0], split(variables('eventHubTelemName'), '/')[1])]"
+      ]
+    },
+    {
       "type": "Microsoft.EventHub/namespaces/eventhubs/consumergroups",
       "apiVersion": "2021-11-01",
       "name": "[format('{0}/$Default', variables('eventHubTelemName'))]",
@@ -606,8 +620,8 @@
         "AzureWebJobsStorage": "[format('DefaultEndpointsProtocol=https;AccountName={0};EndpointSuffix={1};AccountKey={2}', format('{0}{1}storage', parameters('ResourcePrefix'), uniqueString(resourceGroup().id)), environment().suffixes.storage, listKeys(resourceId('Microsoft.Storage/storageAccounts', format('{0}{1}storage', parameters('ResourcePrefix'), uniqueString(resourceGroup().id))), '2021-08-01').keys[0].value)]",
         "DeleteOnProcessComplete": "true",
         "DiagnosticServices_EXTENSION_VERSION": "~3",
-        "adtinstanceUrl": "",
-        "TwinUpdateServiceEventHub": "Endpoint=sb://eiprotodeveventhub.servicebus.windows.net/;SharedAccessKeyName=TwinUpdateService;SharedAccessKey=y4nxeH2XvKr4ODOrh+SJwq+08nl9wv5EU0g+Cxe6hCA=;EntityPath=telemetrydata",
+        "adtinstanceUrl": "[format('https://{0}.api.eus.digitaltwins.azure.net', format('{0}ADT', parameters('ResourcePrefix')))]",
+        "TwinUpdateServiceEventHub": "[listKeys(resourceId('Microsoft.EventHub/namespaces/eventhubs/authorizationRules', split(format('{0}/telemetrydata/TwinUpdateService', variables('eventHubNSName')), '/')[0], split(format('{0}/telemetrydata/TwinUpdateService', variables('eventHubNSName')), '/')[1], split(format('{0}/telemetrydata/TwinUpdateService', variables('eventHubNSName')), '/')[2]), '2021-11-01').primaryConnectionString]",
         "FUNCTIONS_EXTENSION_VERSION": "~3",
         "WEBSITE_CONTENTAZUREFILECONNECTIONSTRING": "[format('DefaultEndpointsProtocol=https;AccountName={0};EndpointSuffix={1};AccountKey={2}', format('{0}{1}storage', parameters('ResourcePrefix'), uniqueString(resourceGroup().id)), environment().suffixes.storage, listKeys(resourceId('Microsoft.Storage/storageAccounts', format('{0}{1}storage', parameters('ResourcePrefix'), uniqueString(resourceGroup().id))), '2021-08-01').keys[0].value)]",
         "WEBSITE_CONTENTSHARE": "itdiotparserb794",
@@ -619,9 +633,20 @@
         "DOCKER_REGISTRY_SERVER_USERNAME": "[variables('dockerRegistryServerUserName')]"
       },
       "dependsOn": [
+        "[resourceId('Microsoft.DigitalTwins/digitalTwinsInstances', format('{0}ADT', parameters('ResourcePrefix')))]",
         "[resourceId('Microsoft.Storage/storageAccounts', format('{0}{1}storage', parameters('ResourcePrefix'), uniqueString(resourceGroup().id)))]",
-        "[resourceId('Microsoft.Web/sites', format('{0}ITDTwinParser', parameters('ResourcePrefix')))]"
+        "[resourceId('Microsoft.Web/sites', format('{0}ITDTwinParser', parameters('ResourcePrefix')))]",
+        "[resourceId('Microsoft.EventHub/namespaces/eventhubs/authorizationRules', split(format('{0}/telemetrydata/TwinUpdateService', variables('eventHubNSName')), '/')[0], split(format('{0}/telemetrydata/TwinUpdateService', variables('eventHubNSName')), '/')[1], split(format('{0}/telemetrydata/TwinUpdateService', variables('eventHubNSName')), '/')[2])]"
       ]
+    },
+    {
+      "type": "Microsoft.DigitalTwins/digitalTwinsInstances",
+      "apiVersion": "2021-06-30-preview",
+      "name": "[format('{0}ADT', parameters('ResourcePrefix'))]",
+      "location": "[parameters('location')]",
+      "properties": {
+        "publicNetworkAccess": "Enabled"
+      }
     },
     {
       "type": "Microsoft.Insights/components",

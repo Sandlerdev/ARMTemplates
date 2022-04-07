@@ -68,7 +68,7 @@ resource IoTHub 'Microsoft.Devices/IotHubs@2021-07-02'= {
           {
             connectionString: blobStorageConnectionString
             containerName: 'telemetrydata'
-            fileNameFormat: '{iothub}/{partition}/{YYYY}/{MM}/{DD}/{HH}/{mm}.avro'
+            fileNameFormat: '{iothub}/{partition}/{YYYY}/{MM}/{DD}/{HH}/{mm}.json'
             encoding: 'JSON'
             name: 'telemetrydata'
           }
