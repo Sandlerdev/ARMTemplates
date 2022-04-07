@@ -5,7 +5,7 @@
     "_generator": {
       "name": "bicep",
       "version": "0.4.1318.3566",
-      "templateHash": "17653215737854885691"
+      "templateHash": "9874841189263225744"
     }
   },
   "parameters": {
@@ -155,13 +155,12 @@
         "sharedAccessKey": "[listkeys(resourceId('Microsoft.Devices/IotHubs', variables('IoTHubName')), '2021-07-02').value[0].primaryKey]",
         "eventSourceResourceId": "[resourceId('Microsoft.Devices/IotHubs', variables('IoTHubName'))]",
         "iotHubName": "[variables('IoTHubName')]",
-        "consumerGroupName": "[variables('TSIConsumerGroupName')]",
+        "consumerGroupName": "tsi",
         "keyName": "iothubowner",
         "timestampPropertyName": "gatewayData.vqts.t"
       },
       "dependsOn": [
         "[resourceId('Microsoft.Devices/IotHubs', variables('IoTHubName'))]",
-        "[resourceId('Microsoft.Devices/IotHubs/eventHubEndpoints/ConsumerGroups', split(variables('TSIConsumerGroupName'), '/')[0], split(variables('TSIConsumerGroupName'), '/')[1], split(variables('TSIConsumerGroupName'), '/')[2])]",
         "[resourceId('Microsoft.TimeSeriesInsights/environments', format('{0}TSI', parameters('ResourcePrefix')))]"
       ]
     },
@@ -183,7 +182,7 @@
         },
         "timeSeriesIdProperties": [
           {
-            "name": "iothub-connection0device-id",
+            "name": "iothub-connection-device-id",
             "type": "String"
           },
           {

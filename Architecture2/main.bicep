@@ -116,7 +116,7 @@ resource TSIES 'Microsoft.TimeSeriesInsights/environments/eventSources@2020-05-1
     sharedAccessKey: iotHubOnwerKey[0].primaryKey
     eventSourceResourceId: IoTHub.id   
     iotHubName: IoTHub.name
-    consumerGroupName: TSIConsumerGroup.name
+    consumerGroupName: 'tsi'
     keyName:'iothubowner'
     timestampPropertyName: 'gatewayData.vqts.t'
 
@@ -142,7 +142,7 @@ resource TSIEVN 'Microsoft.TimeSeriesInsights/environments@2020-05-15' = {
 
     timeSeriesIdProperties: [
       {
-        name: 'iothub-connection0device-id'
+        name: 'iothub-connection-device-id'
         type: 'String'
       }
       {
