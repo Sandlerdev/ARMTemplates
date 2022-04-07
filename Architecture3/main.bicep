@@ -43,8 +43,8 @@ var IoTHubName = '${ResourcePrefix}IoTHub'
 var TSIConsumerGroupName = 'tsieventhub' 
 
 
-var timeSeriesIdPropertiesKey1 = 'iothub-connection0device-id'
-var timeSeriesIdPropertiesKey2 = 'gatewayData.model_id'
+var timeSeriesIdPropertiesKey1 = 'systemProperties.iothubconnectiondeviceid'
+var timeSeriesIdPropertiesKey2 = 'body.gatewayData.model_id'
 
 var eventHubSKUName = 'Standard'
 var eventHubSKUTier = 'Standard'
