@@ -92,7 +92,7 @@ resource IoTHub 'Microsoft.Devices/IotHubs@2021-07-02'= {
       '$default': {
         sasTtlAsIso8601: 'PT1H'
         connectionString: blobStorageConnectionString
-        containerName: 'initialuploads'
+        containerName: 'telemetrydata'
         authenticationType: 'keyBased'
       }
     }
