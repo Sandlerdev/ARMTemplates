@@ -4,8 +4,8 @@
   "metadata": {
     "_generator": {
       "name": "bicep",
-      "version": "0.4.1318.3566",
-      "templateHash": "6743662663372901199"
+      "version": "0.5.6.12127",
+      "templateHash": "1994049139536076320"
     }
   },
   "parameters": {
@@ -468,7 +468,7 @@
         "AzureWebJobsStorage": "[format('DefaultEndpointsProtocol=https;AccountName={0};EndpointSuffix={1};AccountKey={2}', format('{0}{1}storage', parameters('ResourcePrefix'), uniqueString(resourceGroup().id)), environment().suffixes.storage, listKeys(resourceId('Microsoft.Storage/storageAccounts', format('{0}{1}storage', parameters('ResourcePrefix'), uniqueString(resourceGroup().id))), '2021-08-01').keys[0].value)]",
         "DeleteOnProcessComplete": "true",
         "DiagnosticServices_EXTENSION_VERSION": "~3",
-        "EventHubCon": "[listKeys(resourceId('Microsoft.EventHub/namespaces/eventhubs/authorizationRules', split(format('{0}/iothubdata/IoTMessageParser', variables('eventHubNSName')), '/')[0], split(format('{0}/iothubdata/IoTMessageParser', variables('eventHubNSName')), '/')[1], split(format('{0}/iothubdata/IoTMessageParser', variables('eventHubNSName')), '/')[2]), '2021-11-01').primaryConnectionString]",
+        "EventHubCon": "[listKeys(resourceId('Microsoft.EventHub/namespaces/eventhubs/authorizationRules', split(format('{0}/telemetrydata/IoTMessageParser', variables('eventHubNSName')), '/')[0], split(format('{0}/telemetrydata/IoTMessageParser', variables('eventHubNSName')), '/')[1], split(format('{0}/telemetrydata/IoTMessageParser', variables('eventHubNSName')), '/')[2]), '2021-11-01').primaryConnectionString]",
         "FUNCTIONS_EXTENSION_VERSION": "~3",
         "WEBSITE_CONTENTAZUREFILECONNECTIONSTRING": "[format('DefaultEndpointsProtocol=https;AccountName={0};EndpointSuffix={1};AccountKey={2}', format('{0}{1}storage', parameters('ResourcePrefix'), uniqueString(resourceGroup().id)), environment().suffixes.storage, listKeys(resourceId('Microsoft.Storage/storageAccounts', format('{0}{1}storage', parameters('ResourcePrefix'), uniqueString(resourceGroup().id))), '2021-08-01').keys[0].value)]",
         "WEBSITE_CONTENTSHARE": "itdblobparser97e3",
@@ -480,9 +480,9 @@
         "DOCKER_REGISTRY_SERVER_USERNAME": "[variables('dockerRegistryServerUserName')]"
       },
       "dependsOn": [
-        "[resourceId('Microsoft.EventHub/namespaces/eventhubs/authorizationRules', split(format('{0}/iothubdata/IoTMessageParser', variables('eventHubNSName')), '/')[0], split(format('{0}/iothubdata/IoTMessageParser', variables('eventHubNSName')), '/')[1], split(format('{0}/iothubdata/IoTMessageParser', variables('eventHubNSName')), '/')[2])]",
         "[resourceId('Microsoft.Storage/storageAccounts', format('{0}{1}storage', parameters('ResourcePrefix'), uniqueString(resourceGroup().id)))]",
-        "[resourceId('Microsoft.Web/sites', format('{0}ITDBlobParser', parameters('ResourcePrefix')))]"
+        "[resourceId('Microsoft.Web/sites', format('{0}ITDBlobParser', parameters('ResourcePrefix')))]",
+        "[resourceId('Microsoft.EventHub/namespaces/eventhubs/authorizationRules', split(format('{0}/telemetrydata/IoTMessageParser', variables('eventHubNSName')), '/')[0], split(format('{0}/telemetrydata/IoTMessageParser', variables('eventHubNSName')), '/')[1], split(format('{0}/telemetrydata/IoTMessageParser', variables('eventHubNSName')), '/')[2])]"
       ]
     },
     {

@@ -436,7 +436,7 @@ resource blobParserSettings 'Microsoft.Web/sites/config@2018-11-01' = {
     AzureWebJobsStorage: blobStorageConnectionString
     DeleteOnProcessComplete: 'true'
     DiagnosticServices_EXTENSION_VERSION: '~3'
-    EventHubCon: iotlistenauthrules.listKeys().primaryConnectionString
+    EventHubCon: telemetrySendauthrules.listKeys().primaryConnectionString
     FUNCTIONS_EXTENSION_VERSION: '~3'
     WEBSITE_CONTENTAZUREFILECONNECTIONSTRING: blobStorageConnectionString
     WEBSITE_CONTENTSHARE: 'itdblobparser97e3'

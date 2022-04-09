@@ -4,8 +4,8 @@
   "metadata": {
     "_generator": {
       "name": "bicep",
-      "version": "0.4.1318.3566",
-      "templateHash": "8573885049411337218"
+      "version": "0.5.6.12127",
+      "templateHash": "17356429463388771467"
     }
   },
   "parameters": {
@@ -76,8 +76,7 @@
         "publicAccess": "None"
       },
       "dependsOn": [
-        "[resourceId('Microsoft.Storage/storageAccounts/blobServices', format('{0}{1}storage', parameters('ResourcePrefix'), uniqueString(resourceGroup().id)), 'default')]",
-        "[resourceId('Microsoft.Storage/storageAccounts', format('{0}{1}storage', parameters('ResourcePrefix'), uniqueString(resourceGroup().id)))]"
+        "[resourceId('Microsoft.Storage/storageAccounts/blobServices', format('{0}{1}storage', parameters('ResourcePrefix'), uniqueString(resourceGroup().id)), 'default')]"
       ]
     },
     {
