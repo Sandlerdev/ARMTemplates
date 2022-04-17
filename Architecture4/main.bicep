@@ -550,7 +550,7 @@ resource ITDTwinParser 'Microsoft.Web/sites@2021-03-01' = {
     hyperV: false
     siteConfig: {
       numberOfWorkers: 1
-      linuxFxVersion: 'DOCKER|eidevcontainers.azurecr.io/itdazurefuncsiotmessageparser:20220323140400'
+      linuxFxVersion: 'DOCKER|eidevcontainers.azurecr.io/itdazurefuncstwinparsersvc:20220310200003'
       acrUseManagedIdentityCreds: false
       alwaysOn: false
       http20Enabled: false

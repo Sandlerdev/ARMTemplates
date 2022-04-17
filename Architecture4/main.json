@@ -5,7 +5,7 @@
     "_generator": {
       "name": "bicep",
       "version": "0.5.6.12127",
-      "templateHash": "1994049139536076320"
+      "templateHash": "16646965631467869845"
     }
   },
   "parameters": {
@@ -588,7 +588,7 @@
         "hyperV": false,
         "siteConfig": {
           "numberOfWorkers": 1,
-          "linuxFxVersion": "DOCKER|eidevcontainers.azurecr.io/itdazurefuncsiotmessageparser:20220323140400",
+          "linuxFxVersion": "DOCKER|eidevcontainers.azurecr.io/itdazurefuncstwinparsersvc:20220310200003",
           "acrUseManagedIdentityCreds": false,
           "alwaysOn": false,
           "http20Enabled": false,
