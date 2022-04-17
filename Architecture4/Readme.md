@@ -1,4 +1,4 @@
-# IoT Data Ingestion with Hot and Cold Paths and Time Series Analysis
+# Cost Effective Information Digital Twins
 
 This architecture is appropriate for users who wish to have high-fidelity digital twins representing the physical devices in their plant.
 
@@ -56,4 +56,4 @@ az deployment group create --resource-group ARMTestRG3 --template-file ./Archite
 
 To launch a Custom deployment of this template click the following link:
 
-[![Deploy to Azure](https://aka.ms/deploytoazurebutton)](https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2FSandlerdev%2FARMTemplates%2Fmaster%2FArchitecture3%2Fmain.json)
+[![Deploy to Azure](https://aka.ms/deploytoazurebutton)](https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2FSandlerdev%2FARMTemplates%2Fmaster%2FArchitecture4%2Fmain.json)
