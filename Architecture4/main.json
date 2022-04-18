@@ -5,7 +5,7 @@
     "_generator": {
       "name": "bicep",
       "version": "0.5.6.12127",
-      "templateHash": "16646965631467869845"
+      "templateHash": "2151666932145888259"
     }
   },
   "parameters": {
@@ -71,8 +71,8 @@
     "eventSourceName": "[format('{0}/{1}EventSource', format('{0}TSI', parameters('ResourcePrefix')), parameters('ResourcePrefix'))]",
     "IoTHubName": "[format('{0}IoTHub', parameters('ResourcePrefix'))]",
     "TSIConsumerGroupName": "tsieventhub",
-    "timeSeriesIdPropertiesKey1": "iothub-connection0device-id",
-    "timeSeriesIdPropertiesKey2": "gatewayData.model_id",
+    "timeSeriesIdPropertiesKey1": "systemProperties.iothubconnectiondeviceid",
+    "timeSeriesIdPropertiesKey2": "body.gatewayData.model_id",
     "eventHubSKUName": "Standard",
     "eventHubSKUTier": "Standard",
     "eventHubSKUCapactity": 1,

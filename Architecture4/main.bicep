@@ -1,16 +1,3 @@
-/*
-IoT Hub
-Storage
-Consumer Group
-EventHub
-AZ funcs
-- Blob Parser
-- Event parser
-- Twin updater
-TSI
-TSI Event Source
-Azure Data Explorer?
-*/
 /*Parmeters*/
 @minLength(3)
 @maxLength(3)
@@ -56,8 +43,8 @@ var IoTHubName = '${ResourcePrefix}IoTHub'
 var TSIConsumerGroupName = 'tsieventhub' 
 
 
-var timeSeriesIdPropertiesKey1 = 'iothub-connection0device-id'
-var timeSeriesIdPropertiesKey2 = 'gatewayData.model_id'
+var timeSeriesIdPropertiesKey1 = 'systemProperties.iothubconnectiondeviceid'
+var timeSeriesIdPropertiesKey2 = 'body.gatewayData.model_id'
 
 var eventHubSKUName = 'Standard'
 var eventHubSKUTier = 'Standard'
