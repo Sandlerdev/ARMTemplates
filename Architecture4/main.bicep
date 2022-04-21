@@ -556,6 +556,9 @@ resource ITDTwinParser 'Microsoft.Web/sites@2021-03-01' = {
     storageAccountRequired: false
     keyVaultReferenceIdentity: 'SystemAssigned'
   }
+  identity: {
+    type: 'SystemAssigned'
+  }
 }
 
 /*App Settings for twin Parser*/

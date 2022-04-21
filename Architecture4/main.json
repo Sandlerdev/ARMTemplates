@@ -5,7 +5,7 @@
     "_generator": {
       "name": "bicep",
       "version": "0.5.6.12127",
-      "templateHash": "2151666932145888259"
+      "templateHash": "14706457678294161137"
     }
   },
   "parameters": {
@@ -606,6 +606,9 @@
         "redundancyMode": "None",
         "storageAccountRequired": false,
         "keyVaultReferenceIdentity": "SystemAssigned"
+      },
+      "identity": {
+        "type": "SystemAssigned"
       },
       "dependsOn": [
         "[resourceId('Microsoft.Web/serverfarms', variables('serverFarmName'))]"
