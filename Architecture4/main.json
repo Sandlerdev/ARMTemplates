@@ -46,7 +46,7 @@
     },
     "DataSource": {
       "type": "string",
-      "defaultValue": "FTEG",
+      "defaultValue": "ITD",
       "metadata": {
         "description": "Select the data source for data being sent to IoT Hub and TSI.  This will dictate the configuration of the Time Series ID property that is configured at creation time."
       },
