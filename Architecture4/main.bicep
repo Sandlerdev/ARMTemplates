@@ -26,7 +26,7 @@ param IoTHubSKU string = 'S1'
   'FTEG'
 ])
 @description('Select the data source for data being sent to IoT Hub and TSI.  This will dictate the configuration of the Time Series ID property that is configured at creation time.')
-param DataSource string = 'FTEG'
+param DataSource string = 'ITD'
 
 @minValue(0)
 @maxValue(30)
